@@ -16,7 +16,10 @@ app.logger.setLevel(logging.INFO)
 
 def get_redis():
     if not hasattr(Flask, 'redis'):
-        Flask.redis = Redis(host="localhost", db=0, socket_timeout=5)
+        redis_host = os.environ.get("REDIS_HOST", "redis")  # localhost -> redis
+        redis_port = int(os.environ.get("REDIS_PORT", 6379))
+        redis_password = os.environ.get("REDIS_PASSWORD", None)
+        Flask.redis = Redis(host=redis_host, port=redis_port, password=redis_password, db=0, socket_timeout=5)
     return Flask.redis
 
 @app.route("/", methods=['POST', 'GET'])
@@ -45,4 +48,5 @@ def hello():
     return resp
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8080, debug=True, threaded=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port, debug=True)
