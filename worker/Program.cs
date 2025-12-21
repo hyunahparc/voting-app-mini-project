@@ -16,8 +16,18 @@ namespace Worker
         {
             try
             {
-                var pgsql = OpenDbConnection("Server=localhost;Username=postgres;Password=postgres;");
-                var redisConn = OpenRedisConnection("localhost");
+                var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+                var dbUser = Environment.GetEnvironmentVariable("DB_USER");
+                var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+                var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+
+                var connString = $"Host={dbHost};Username={dbUser};Password={dbPassword};Database={dbName}";
+
+                var pgsql = OpenDbConnection(connString);
+
+                var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST");
+                var redisConn = OpenRedisConnection(redisHost);
+
                 var redis = redisConn.GetDatabase();
 
                 var keepAliveCommand = pgsql.CreateCommand();
@@ -44,7 +54,7 @@ namespace Worker
                         if (!pgsql.State.Equals(System.Data.ConnectionState.Open))
                         {
                             Console.WriteLine("Reconnecting DB");
-                            pgsql = OpenDbConnection("Server=localhost;Username=postgres;Password=postgres;");
+                            pgsql = OpenDbConnection(connString);
                         }
                         else
                         {
@@ -102,8 +112,9 @@ namespace Worker
 
         private static ConnectionMultiplexer OpenRedisConnection(string hostname)
         {
-            // Use IP address to workaround https://github.com/StackExchange/StackExchange.Redis/issues/410
+            var password = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
             var ipAddress = GetIp(hostname);
+
             Console.WriteLine($"Found redis at {ipAddress}");
 
             while (true)
@@ -111,7 +122,12 @@ namespace Worker
                 try
                 {
                     Console.Error.WriteLine("Connecting to redis");
-                    return ConnectionMultiplexer.Connect(ipAddress);
+                    var options = new ConfigurationOptions
+                        {
+                            EndPoints = { ipAddress },
+                            Password = password
+                        };
+                    return ConnectionMultiplexer.Connect(options);
                 }
                 catch (RedisConnectionException)
                 {
@@ -120,6 +136,7 @@ namespace Worker
                 }
             }
         }
+
 
         private static string GetIp(string hostname)
             => Dns.GetHostEntryAsync(hostname)
