@@ -1,0 +1,135 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    secrets:
+      - redis_password
+    command:
+      sh -c "redis-server --requirepass \"$$(cat /run/secrets/redis_password)\""
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: postgres
+    secrets:
+      - db_password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == manager1
+      restart_policy:
+        condition: any
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  vote:
+    image: vote:latest
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      PORT: 8080
+    secrets:
+      - redis_password
+    ports:
+      - "5000:8080"
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.hostname == manager1
+      restart_policy:
+        condition: any
+
+  worker:
+    image: worker:latest
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_NAME: postgres
+    secrets:
+      - redis_password
+      - db_password
+    networks:
+      - backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+
+  result:
+    image: result:latest
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_NAME: postgres
+    secrets:
+      - db_password
+    ports:
+      - "3000:8888"
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.hostname == manager1
+      restart_policy:
+        condition: any
+
+volumes:
+  db-data:
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
+
+secrets:
+  redis_password:
+    external: true
+  db_password:
+    external: true
+
