@@ -18,7 +18,9 @@ namespace Worker
             {
                 var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
                 var dbUser = Environment.GetEnvironmentVariable("DB_USER");
-                var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+                var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD_FILE") != null
+                                ? System.IO.File.ReadAllText(Environment.GetEnvironmentVariable("DB_PASSWORD_FILE")).Trim()
+                                : Environment.GetEnvironmentVariable("DB_PASSWORD");
                 var dbName = Environment.GetEnvironmentVariable("DB_NAME");
 
                 var connString = $"Host={dbHost};Username={dbUser};Password={dbPassword};Database={dbName}";
@@ -112,7 +114,10 @@ namespace Worker
 
         private static ConnectionMultiplexer OpenRedisConnection(string hostname)
         {
-            var password = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+            var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD_FILE") != null
+                                ? System.IO.File.ReadAllText(Environment.GetEnvironmentVariable("REDIS_PASSWORD_FILE")).Trim()
+                                : Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+
             var ipAddress = GetIp(hostname);
 
             Console.WriteLine($"Found redis at {ipAddress}");
@@ -125,7 +130,7 @@ namespace Worker
                     var options = new ConfigurationOptions
                         {
                             EndPoints = { ipAddress },
-                            Password = password
+                            Password = redisPassword
                         };
                     return ConnectionMultiplexer.Connect(options);
                 }

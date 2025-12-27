@@ -18,8 +18,21 @@ def get_redis():
     if not hasattr(Flask, 'redis'):
         redis_host = os.environ.get("REDIS_HOST", "redis")  # localhost -> redis
         redis_port = int(os.environ.get("REDIS_PORT", 6379))
-        redis_password = os.environ.get("REDIS_PASSWORD", None)
-        Flask.redis = Redis(host=redis_host, port=redis_port, password=redis_password, db=0, socket_timeout=5)
+        
+        redis_password = None
+        password_file = os.environ.get("REDIS_PASSWORD_FILE")
+
+        if password_file and os.path.exists(password_file):
+            with open(password_file) as f:
+                redis_password = f.read().strip()
+
+        Flask.redis = Redis(
+            host=redis_host,
+            port=redis_port,
+            password=redis_password,
+            db=0,
+            socket_timeout=5
+        )
     return Flask.redis
 
 @app.route("/", methods=['POST', 'GET'])

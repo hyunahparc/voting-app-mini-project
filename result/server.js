@@ -7,7 +7,8 @@ let express = require("express"),
   methodOverride = require("method-override"),
   app = express(),
   server = require("http").Server(app),
-  io = require("socket.io")(server)
+  io = require("socket.io")(server),
+  fs = require('fs')
 
 io.set("transports", ["polling"])
 
@@ -25,7 +26,7 @@ io.sockets.on("connection", function (socket) {
 const pool = new pg.Pool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  password: process.env.DB_PASSWORD_FILE ? fs.readFileSync(process.env.DB_PASSWORD_FILE, 'utf8').trim() : process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: 5432,
 })
