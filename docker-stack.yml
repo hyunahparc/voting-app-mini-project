@@ -53,7 +53,7 @@ services:
       retries: 5
 
   vote:
-    image: vote:latest
+    image: 192.168.99.100:5005/vote:1.0
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -75,7 +75,7 @@ services:
         condition: any
 
   worker:
-    image: worker:latest
+    image: 192.168.99.100:5005/worker:1.0
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -96,7 +96,7 @@ services:
         condition: any
 
   result:
-    image: result:latest
+    image: 192.168.99.100:5005/result:1.0
     environment:
       DB_HOST: db
       DB_PORT: 5432
