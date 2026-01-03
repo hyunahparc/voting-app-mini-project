@@ -1,0 +1,17 @@
+services:
+  registry:
+    image: registry:2
+    ports:
+      - "5005:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager   # force to place in manager node
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  registry-data:
