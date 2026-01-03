@@ -1,8 +1,8 @@
 🔗 **Dépôt GitHub**  
 https://github.com/hyunahparc/voting-app-mini-project.git
 
-> Ce projet a été réalisé **en collaboration sur un même ordinateur**.  
-> Pour cette raison, l’ensemble du code a été versionné et poussé sur GitHub à partir d’un seul compte.
+Ce projet a été réalisé **en collaboration sur un même ordinateur**.  
+Pour cette raison, l’ensemble du code a été versionné et poussé sur GitHub à partir d’un seul compte.
 
 ---
 
@@ -91,15 +91,16 @@ Pour le déploiement en mode distribué, voir le fichier [deployment.md](https:/
 ## Structure du projet
 ```
 project-root/
-├─ vote/
 ├─ result/
+├─ vote/
 ├─ worker/
-├─ docker-compose.yml
-├─ docker-stack.yml
-├─ registry.yml
 ├─ .env
 ├─ .gitignore
+├─ deployment.md
+├─ docker-compose.yml
+├─ docker-stack.yml
 ├─ README.md
+├─ registry.yml
 └─ Vagrantfile
 ```
 
@@ -116,5 +117,4 @@ project-root/
 
 ## Remarques
 
-Projet à but pédagogique et démonstratif
-Non destiné à un environnement de production sans adaptations
+Projet à but pédagogique et démonstratif. Non destiné à un environnement de production sans adaptations.

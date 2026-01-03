@@ -9,10 +9,11 @@ L'objectif est de configurer un cluster multi-nœuds avec tolérance aux pannes 
 Nous utilisons **Vagrant + Virtual Box** pour créer trois machine virtuelles : 1 manager et 2 workers.
 
 Chaque VM possède une IP fixe sur un réseau privé :
-
+```
 Manager : 192.168.99.100
 Worker1 : 192.168.99.101
 Worker2 : 192.168.99.102
+```
 
 #### 1) Initialisation du cluster Swarm sur le manager :
 ```bash
