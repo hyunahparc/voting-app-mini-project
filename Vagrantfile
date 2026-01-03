@@ -16,18 +16,20 @@ Vagrant.configure("2") do |config|
 
       # Share project folder into the VM
       config.vm.synced_folder "./", "/home/vagrant/voting-app-swarm"
-      
-      # Add port forwarding (host → guest)
-      if node_name == "manager1"
-        node.vm.network "forwarded_port", guest: 5000, host: 5000  # vote 서비스
-        node.vm.network "forwarded_port", guest: 3000, host: 3000  # result 서비스
+
+      # VirtualBox provider
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = node_name
+        vb.memory = "1024"
+        vb.cpus = 1
       end
 
-      node.vm.provider "vmware_desktop" do |v|
-        v.vmx["displayname"] = node_name
-        v.vmx["memsize"] = "1024"
-        v.vmx["numvcpus"] = "1"
-      end
+      # # VMWare provider
+      # node.vm.provider "vmware_desktop" do |v|
+      #   v.vmx["displayname"] = node_name
+      #   v.vmx["memsize"] = "1024"
+      #   v.vmx["numvcpus"] = "1"
+      # end
 
       # Provisioning script
       node.vm.provision "shell", inline: <<-SHELL
@@ -42,9 +44,18 @@ Vagrant.configure("2") do |config|
         sudo apt-get update -y
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-        # Expose Docker daemon over TCP
+        # Configure Docker daemon: TCP + insecure registry
         sudo mkdir -p /etc/systemd/system/docker.service.d
+        sudo bash -c 'cat > /etc/docker/daemon.json <<EOF
+{
+  "insecure-registries": ["192.168.99.100:5005"]
+}
+EOF'
+
+        # Keep TCP exposure
         sudo bash -c 'echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2375" > /etc/systemd/system/docker.service.d/options.conf'
+
+        # Reload systemd & restart Docker
         sudo systemctl daemon-reload
         sudo systemctl restart docker
       SHELL
