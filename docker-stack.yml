@@ -41,9 +41,6 @@ services:
       - backend
     deploy:
       replicas: 1
-      placement:
-        constraints:
-          - node.hostname == manager1
       restart_policy:
         condition: any
     healthcheck:
@@ -70,7 +67,7 @@ services:
       replicas: 2
       placement:
         constraints:
-          - node.hostname == manager1
+          - node.role == worker
       restart_policy:
         condition: any
 
@@ -91,7 +88,10 @@ services:
     networks:
       - backend
     deploy:
-      replicas: 2
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: any
 
@@ -114,7 +114,7 @@ services:
       replicas: 2
       placement:
         constraints:
-          - node.hostname == manager1
+          - node.role == worker
       restart_policy:
         condition: any
 
